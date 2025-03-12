@@ -1,0 +1,35 @@
+version: 0.0.1
+type: plugin
+author: sunlm
+name: yuanjing
+label:
+  en_US: yuanjing
+  ja_JP: yuanjing
+  zh_Hans: yuanjing
+  pt_BR: yuanjing
+description:
+  en_US: yuanjing llm api
+  ja_JP: yuanjing llm api
+  zh_Hans: yuanjing llm api
+  pt_BR: yuanjing llm api
+icon: icon.svg
+resource:
+  memory: 268435456
+  permission:
+    model:
+      enabled: false
+plugins:
+  models:
+    - provider/yuanjing.yaml
+meta:
+  version: 0.0.1
+  arch:
+    - amd64
+    - arm64
+  runner:
+    language: python
+    version: "3.12"
+    entrypoint: main
+created_at: 2025-03-12T11:23:38.289729+08:00
+privacy: PRIVACY.md
+verified: false
