@@ -55,3 +55,8 @@ extra:
     provider_source: provider/yuanjing.py
     model_sources:
       - "models/llm/llm.py"
+identity:
+  author: leeeeeem
+  description:
+    en_US: yuanjing llm adapter
+    zh_Hans: yuanjing 大模型适配器
