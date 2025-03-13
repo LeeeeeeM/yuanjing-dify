@@ -51,10 +51,13 @@ class YuanjingLargeLanguageModel(OAICompatLargeLanguageModel):
         user: Optional[str] = None,
     ) -> Union[LLMResult, Generator]:
         self._add_custom_parameters(credentials)
-
-        # print(f"model: {model}, credentials: {credentials}, prompt_messages: {prompt_messages}, model_parameters: {model_parameters}, tools: {tools}, stop: {stop}, stream: {stream}, user: {user} -----")
-
-        return self._generate(model, credentials, prompt_messages, model_parameters, tools, stop, stream, user)
+        # coder 走 blocking 逻辑
+        is_coder = model == "unicom-70b-coder"
+        print(f"model: {model}, credentials: {credentials} is_coder: {is_coder}")
+        self._coder_parameters_adaptor(credentials, is_coder)
+        # real stream
+        real_stream = stream and not is_coder
+        return self._generate(model, credentials, prompt_messages, model_parameters, tools, stop, real_stream, user, is_coder)
 
 
     def _generate(
@@ -67,6 +70,7 @@ class YuanjingLargeLanguageModel(OAICompatLargeLanguageModel):
         stop: Optional[list[str]] = None,
         stream: bool = True,
         user: Optional[str] = None,
+        is_coder: bool = False,
     ) -> Union[LLMResult, Generator]:
         """
         Invoke llm completion model
@@ -96,7 +100,7 @@ class YuanjingLargeLanguageModel(OAICompatLargeLanguageModel):
             headers["Authorization"] = f"Bearer {api_key}"
 
         endpoint_url = credentials["endpoint_url"]
-        if not endpoint_url.endswith("/"):
+        if not endpoint_url.endswith("/") and not is_coder:
             endpoint_url += "/"
 
         response_format = model_parameters.get("response_format")
@@ -121,13 +125,16 @@ class YuanjingLargeLanguageModel(OAICompatLargeLanguageModel):
         completion_type = LLMMode.value_of(credentials["mode"])
 
         if completion_type is LLMMode.CHAT:
-            endpoint_url = urljoin(endpoint_url, "chat/completions")
+            if not is_coder:
+                endpoint_url = urljoin(endpoint_url, "chat/completions")
             data["messages"] = [self._convert_prompt_message_to_dict(m, credentials) for m in prompt_messages]
         elif completion_type is LLMMode.COMPLETION:
             endpoint_url = urljoin(endpoint_url, "completions")
             data["prompt"] = prompt_messages[0].content
         else:
             raise ValueError("Unsupported completion type for model configuration.")
+
+        print(f"endpoint_url: {endpoint_url}")
 
         # annotate tools with names, descriptions, etc.
         function_calling_type = credentials.get("function_calling_type", "no_call")
@@ -156,6 +163,8 @@ class YuanjingLargeLanguageModel(OAICompatLargeLanguageModel):
         if user:
             data["user"] = user
 
+        print(f"request data: {data}, headers: {headers}  is_coder: {is_coder} stream: {stream} ====")
+
         response = requests.post(endpoint_url, headers=headers, json=data, timeout=(10, 300), stream=stream)
 
         if response.encoding is None or response.encoding == "ISO-8859-1":
@@ -165,9 +174,9 @@ class YuanjingLargeLanguageModel(OAICompatLargeLanguageModel):
             raise InvokeError(f"API request failed with status code {response.status_code}: {response.text}")
 
         if stream:
-            return self._handle_generate_stream_response(model, credentials, response, prompt_messages)
+            return self._handle_generate_stream_response(model, credentials, response, prompt_messages, is_coder)
 
-        return self._handle_generate_response(model, credentials, response, prompt_messages)
+        return self._handle_generate_response(model, credentials, response, prompt_messages, is_coder)
 
 
     def _handle_generate_stream_response(
@@ -176,6 +185,7 @@ class YuanjingLargeLanguageModel(OAICompatLargeLanguageModel):
         credentials: dict,
         response: requests.Response,
         prompt_messages: list[PromptMessage],
+        is_coder: bool = False,
     ) -> Generator:
         """
         Handle llm stream response
@@ -263,8 +273,8 @@ class YuanjingLargeLanguageModel(OAICompatLargeLanguageModel):
         message_id, usage = None, None
         for chunk in response.iter_lines(decode_unicode=True, delimiter=delimiter):
             chunk = chunk.strip()
-            print(f"origin chunk: {chunk} -------")
             if chunk:
+                print(f"origin chunk ====>: {chunk} ====")
                 # ignore sse comments
                 if chunk.startswith(":"):
                     continue
@@ -276,10 +286,10 @@ class YuanjingLargeLanguageModel(OAICompatLargeLanguageModel):
                 try:
                     chunk_json: dict = json.loads(decoded_chunk)
 
-                    print(f"chunk_json: {chunk_json} --- @@@@")
+                    print(f"chunk_json ===>: {chunk_json} ====")
                 # stream ended
                 except json.JSONDecodeError:
-                    print(f"chunk_json_parse_error: --- !!!")
+                    print(f"chunk_json_parse_error: !!!")
                     yield create_final_llm_result_chunk(
                         id=message_id,
                         index=chunk_index + 1,
@@ -382,8 +392,13 @@ class YuanjingLargeLanguageModel(OAICompatLargeLanguageModel):
         credentials: dict,
         response: requests.Response,
         prompt_messages: list[PromptMessage],
+        is_coder: bool = False,
     ) -> LLMResult:
         response_json: dict = response.json()
+
+        # coder model response
+        if is_coder:
+            response_json = response_json["data"]
 
         print(f"response_json: {response_json}")
 
@@ -447,6 +462,11 @@ class YuanjingLargeLanguageModel(OAICompatLargeLanguageModel):
     def _add_custom_parameters(cls, credentials: dict) -> None:
         credentials["mode"] = "chat"
         credentials["endpoint_url"] = "https://maas-api.ai-yuanjing.com/openapi/compatible-mode/v1"
+
+    @classmethod
+    def _coder_parameters_adaptor(cls, credentials: dict, is_coder: bool) -> None:
+        if is_coder:
+            credentials["endpoint_url"] = "https://maas-api.ai-yuanjing.com/openapi/v1/coder-generate"
 
     @property
     def _invoke_error_mapping(self) -> dict[type[InvokeError], list[type[Exception]]]:
