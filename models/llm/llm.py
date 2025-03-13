@@ -456,6 +456,10 @@ class YuanjingLargeLanguageModel(OAICompatLargeLanguageModel):
 
     def validate_credentials(self, model: str, credentials: dict) -> None:
         self._add_custom_parameters(credentials)
+        is_coder = model == "unicom-70b-coder"
+        # 如果是 coder 则走普通校验逻辑
+        if is_coder:
+            model = "yuanjing2-8b-chat"
         super().validate_credentials(model, credentials)
 
     @classmethod
