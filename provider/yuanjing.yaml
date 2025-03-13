@@ -14,7 +14,7 @@ help:
     en_US: Get your API Key from yuanjing
     zh_Hans: 从 Yuanjing 获取 API Key
   url:
-    en_US: https://__put_your_url_here__/account/api-keys
+    en_US: https://maas.ai-yuanjing.com/aibase/userCenter/app
 supported_model_types:
   - llm
 configurate_methods:
@@ -35,8 +35,6 @@ model_credential_schema:
       en_US: Model Name
       zh_Hans: 模型名称
       placeholder:
-      en_US: Enter your model name
-      zh_Hans: 输入模型名称
 provider_credential_schema:
   credential_form_schemas:
     - label:
