@@ -53,7 +53,7 @@ class YuanjingLargeLanguageModel(OAICompatLargeLanguageModel):
         self._add_custom_parameters(credentials)
         # coder 走 blocking 逻辑
         is_coder = model == "unicom-70b-coder"
-        print(f"model: {model}, credentials: {credentials} is_coder: {is_coder}")
+        # print(f"model: {model}, credentials: {credentials} is_coder: {is_coder}")
         self._coder_parameters_adaptor(credentials, is_coder)
         # real stream
         real_stream = stream and not is_coder
@@ -134,7 +134,7 @@ class YuanjingLargeLanguageModel(OAICompatLargeLanguageModel):
         else:
             raise ValueError("Unsupported completion type for model configuration.")
 
-        print(f"endpoint_url: {endpoint_url}")
+        # print(f"endpoint_url: {endpoint_url}")
 
         # annotate tools with names, descriptions, etc.
         function_calling_type = credentials.get("function_calling_type", "no_call")
@@ -163,7 +163,7 @@ class YuanjingLargeLanguageModel(OAICompatLargeLanguageModel):
         if user:
             data["user"] = user
 
-        print(f"request data: {data}, headers: {headers}  is_coder: {is_coder} stream: {stream} ====")
+        # print(f"request data: {data}, headers: {headers}  is_coder: {is_coder} stream: {stream} ====")
 
         response = requests.post(endpoint_url, headers=headers, json=data, timeout=(10, 300), stream=stream)
 
@@ -274,7 +274,7 @@ class YuanjingLargeLanguageModel(OAICompatLargeLanguageModel):
         for chunk in response.iter_lines(decode_unicode=True, delimiter=delimiter):
             chunk = chunk.strip()
             if chunk:
-                print(f"origin chunk ====>: {chunk} ====")
+                # print(f"origin chunk ====>: {chunk} ====")
                 # ignore sse comments
                 if chunk.startswith(":"):
                     continue
@@ -286,10 +286,10 @@ class YuanjingLargeLanguageModel(OAICompatLargeLanguageModel):
                 try:
                     chunk_json: dict = json.loads(decoded_chunk)
 
-                    print(f"chunk_json ===>: {chunk_json} ====")
+                    # print(f"chunk_json ===>: {chunk_json} ====")
                 # stream ended
                 except json.JSONDecodeError:
-                    print(f"chunk_json_parse_error: !!!")
+                    # print(f"chunk_json_parse_error: !!!")
                     yield create_final_llm_result_chunk(
                         id=message_id,
                         index=chunk_index + 1,
@@ -400,7 +400,7 @@ class YuanjingLargeLanguageModel(OAICompatLargeLanguageModel):
         if is_coder:
             response_json = response_json["data"]
 
-        print(f"response_json: {response_json}")
+        # print(f"response_json: {response_json}")
 
         completion_type = LLMMode.value_of(credentials["mode"])
 
