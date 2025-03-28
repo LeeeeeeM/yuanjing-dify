@@ -1,7 +1,7 @@
 ## yuanjing
 
 **Author:** sunlm
-**Version:** 0.0.6
+**Version:** 0.0.7
 **Type:** model
 
 ### Description
