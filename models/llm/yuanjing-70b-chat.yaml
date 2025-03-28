@@ -1,7 +1,7 @@
-model: yuanjing2-14b-chat
+model: yuanjing-70b-chat
 label:
-  zh_Hans: Yuanjing2-14B-Chat
-  en_US: Yuanjing2-14B-Chat
+  zh_Hans: Yuanjing-70B-Chat
+  en_US: Yuanjing-70B-Chat
 model_type: llm
 features:
   - agent-thought
