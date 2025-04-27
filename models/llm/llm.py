@@ -28,6 +28,7 @@ from dify_plugin.entities.model.message import (
     PromptMessage,
     PromptMessageTool,
     AssistantPromptMessage,
+    PromptMessageFunction,
 )
 
 import requests
@@ -120,7 +121,7 @@ class YuanjingLargeLanguageModel(OAICompatLargeLanguageModel):
         elif "json_schema" in model_parameters:
             del model_parameters["json_schema"]
 
-        data = {"model": model, "stream": stream, **model_parameters}
+        data = {"model": model, "stream": stream, **model_parameters, "max_tokens": int(credentials.get("max_tokens", "4096")) }
 
         completion_type = LLMMode.value_of(credentials["mode"])
 
@@ -164,7 +165,6 @@ class YuanjingLargeLanguageModel(OAICompatLargeLanguageModel):
             data["user"] = user
 
         # print(f"request data: {data}, headers: {headers}  is_coder: {is_coder} stream: {stream} ====")
-
         response = requests.post(endpoint_url, headers=headers, json=data, timeout=(10, 300), stream=stream)
 
         if response.encoding is None or response.encoding == "ISO-8859-1":

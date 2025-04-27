@@ -30,6 +30,15 @@ model_credential_schema:
       required: true
       type: secret-input
       variable: api_key
+    - default: '4096'
+      label:
+        en_US: Upper bound for max tokens
+        zh_Hans: 最大 token 上限， 默认 4096
+      show_on:
+      - value: llm
+        variable: __model_type
+      type: text-input
+      variable: max_tokens
   model:
     label:
       en_US: Model Name
