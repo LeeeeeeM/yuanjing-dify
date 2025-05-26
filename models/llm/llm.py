@@ -28,6 +28,7 @@ from dify_plugin.entities.model.message import (
     PromptMessage,
     PromptMessageTool,
     AssistantPromptMessage,
+    PromptMessageFunction,
 )
 
 import requests
@@ -36,6 +37,13 @@ import json
 from urllib.parse import urljoin
 
 logger = logging.getLogger(__name__)
+
+# 设置日志级别
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.WARNING)
+console_handler.setFormatter(formatter)
+logger.addHandler(console_handler)
 
 
 class YuanjingLargeLanguageModel(OAICompatLargeLanguageModel):
@@ -166,6 +174,13 @@ class YuanjingLargeLanguageModel(OAICompatLargeLanguageModel):
         # print(f"request data: {data}, headers: {headers}  is_coder: {is_coder} stream: {stream} ====")
 
         response = requests.post(endpoint_url, headers=headers, json=data, timeout=(10, 300), stream=stream)
+        logger.warning(
+            f"YuanJing LLM ===> data: {data}"
+        )
+        
+        logger.warning(
+            f"YuanJing LLM ===> headers: {headers}"
+        )
 
         if response.encoding is None or response.encoding == "ISO-8859-1":
             response.encoding = "utf-8"
@@ -217,6 +232,10 @@ class YuanjingLargeLanguageModel(OAICompatLargeLanguageModel):
 
             # transform usage
             usage_obj = self._calc_response_usage(model, credentials, prompt_tokens, completion_tokens)
+            
+            logger.warning(
+                f"YuanJing LLM ===> create_final_llm_result_chunk: {full_assistant_content}, prompt_messages: {prompt_messages}, message: {message}"
+            )
 
             return LLMResultChunk(
                 model=model,
@@ -357,6 +376,9 @@ class YuanjingLargeLanguageModel(OAICompatLargeLanguageModel):
                 else:
                     continue
 
+                logger.warning(
+                    f"YuanJing LLM ===> normal_chunk: prompt_messages: {prompt_messages}, assistant_prompt_message: {assistant_prompt_message}"
+                )
                 yield LLMResultChunk(
                     model=model,
                     prompt_messages=prompt_messages,
@@ -369,12 +391,19 @@ class YuanjingLargeLanguageModel(OAICompatLargeLanguageModel):
             chunk_index += 1
 
         if tools_calls:
+            assistant_prompt_message = AssistantPromptMessage(
+                content="",
+                tool_calls=tools_calls,
+            )
+            logger.warning(
+                f"YuanJing LLM ===> tools_calls: {tools_calls}, prompt_messages: {prompt_messages}, assistant_prompt_message: {assistant_prompt_message}"
+            )
             yield LLMResultChunk(
                 model=model,
                 prompt_messages=prompt_messages,
                 delta=LLMResultChunkDelta(
                     index=chunk_index,
-                    message=AssistantPromptMessage(tool_calls=tools_calls, content=""),
+                    message=assistant_prompt_message,
                 ),
             )
 
@@ -450,6 +479,10 @@ class YuanjingLargeLanguageModel(OAICompatLargeLanguageModel):
             prompt_messages=prompt_messages,
             message=assistant_message,
             usage=usage,
+        )
+        
+        logger.warning(
+            f"YuanJing LLM ===> blocking result: {result}"
         )
 
         return result
