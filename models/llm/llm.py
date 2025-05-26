@@ -42,6 +42,14 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
 logger.addHandler(plugin_logger_handler)
 
+def logger_warning(message: str):
+    """
+    Log a warning message with the logger.
+    
+    :param message: The message to log.
+    """
+    message = message.replace("\n", "")
+    logger.warning(message)
 
 class YuanjingLargeLanguageModel(OAICompatLargeLanguageModel):
     def _invoke(
@@ -171,11 +179,11 @@ class YuanjingLargeLanguageModel(OAICompatLargeLanguageModel):
         # print(f"request data: {data}, headers: {headers}  is_coder: {is_coder} stream: {stream} ====")
 
         response = requests.post(endpoint_url, headers=headers, json=data, timeout=(10, 300), stream=stream)
-        logger.warning(
+        logger_warning(
             f"YuanJing LLM ===> data: {data}"
         )
         
-        logger.warning(
+        logger_warning(
             f"YuanJing LLM ===> headers: {headers}"
         )
 
@@ -230,8 +238,13 @@ class YuanjingLargeLanguageModel(OAICompatLargeLanguageModel):
             # transform usage
             usage_obj = self._calc_response_usage(model, credentials, prompt_tokens, completion_tokens)
             
-            logger.warning(
-                f"YuanJing LLM ===> create_final_llm_result_chunk: {full_assistant_content}, prompt_messages: {prompt_messages}, message: {message}"
+            
+            logger_warning(
+                f"YuanJing LLM ===> create_final_llm_result_chunk_assistant: {full_assistant_content}"
+            )
+
+            logger_warning(
+                f"YuanJing LLM ===> create_final_llm_result_chunk_message: prompt_messages: {prompt_messages}, message: {message}"
             )
 
             return LLMResultChunk(
@@ -373,7 +386,7 @@ class YuanjingLargeLanguageModel(OAICompatLargeLanguageModel):
                 else:
                     continue
 
-                logger.warning(
+                logger_warning(
                     f"YuanJing LLM ===> normal_chunk: prompt_messages: {prompt_messages}, assistant_prompt_message: {assistant_prompt_message}"
                 )
                 yield LLMResultChunk(
@@ -392,7 +405,7 @@ class YuanjingLargeLanguageModel(OAICompatLargeLanguageModel):
                 content="",
                 tool_calls=tools_calls,
             )
-            logger.warning(
+            logger_warning(
                 f"YuanJing LLM ===> tools_calls: {tools_calls}, prompt_messages: {prompt_messages}, assistant_prompt_message: {assistant_prompt_message}"
             )
             yield LLMResultChunk(
@@ -478,7 +491,7 @@ class YuanjingLargeLanguageModel(OAICompatLargeLanguageModel):
             usage=usage,
         )
         
-        logger.warning(
+        logger_warning(
             f"YuanJing LLM ===> blocking result: {result}"
         )
 
