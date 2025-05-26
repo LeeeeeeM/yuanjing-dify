@@ -1,6 +1,7 @@
 import logging
 from collections.abc import Generator
 from typing import Optional, Union
+from dify_plugin.config.logger_format import plugin_logger_handler
 
 from dify_plugin import OAICompatLargeLanguageModel
 from dify_plugin.entities import I18nObject
@@ -38,12 +39,8 @@ from urllib.parse import urljoin
 
 logger = logging.getLogger(__name__)
 
-# 设置日志级别
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.WARNING)
-console_handler.setFormatter(formatter)
-logger.addHandler(console_handler)
+logger.setLevel(logging.WARNING)
+logger.addHandler(plugin_logger_handler)
 
 
 class YuanjingLargeLanguageModel(OAICompatLargeLanguageModel):
