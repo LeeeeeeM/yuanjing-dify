@@ -1,4 +1,4 @@
-version: 0.0.10
+version: 0.0.11
 type: plugin
 author: leeeeeem
 name: yuanjing2
@@ -22,7 +22,7 @@ plugins:
   models:
     - provider/yuanjing.yaml
 meta:
-  version: 0.0.10
+  version: 0.0.11
   arch:
     - amd64
     - arm64
