@@ -514,21 +514,3 @@ class YuanjingLargeLanguageModel(OAICompatLargeLanguageModel):
     def _coder_parameters_adaptor(cls, credentials: dict, is_coder: bool) -> None:
         if is_coder:
             credentials["endpoint_url"] = "https://maas-api.ai-yuanjing.com/openapi/v1/coder-generate"
-
-    @property
-    def _invoke_error_mapping(self) -> dict[type[InvokeError], list[type[Exception]]]:
-        """
-        Map model invoke error to unified error
-        The key is the error type thrown to the caller
-        The value is the error type thrown by the model,
-        which needs to be converted into a unified error type for the caller.
-
-        :return: Invoke error mapping
-        """
-        return {
-            InvokeConnectionError: [],
-            InvokeServerUnavailableError: [],
-            InvokeRateLimitError: [],
-            InvokeAuthorizationError: [],
-            InvokeBadRequestError: [],
-        }
